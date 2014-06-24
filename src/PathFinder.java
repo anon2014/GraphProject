@@ -5,50 +5,62 @@ import java.util.List;
 public class PathFinder {
 
 	  /**
+	   * Wrapper method around findMaxPathLengthStartingWithRoot
+	   * @param root node
+	   * @return maximum path length (in case there is no loop or invlid input)
+	   * 		 -1 (if there is loop)
+	   * 		 -2 (if the root or the graph is null/invalid)
+	   */
+	  public static int findMaxPathLength(Node root) {
+		  try {
+			  return PathFinder.findMaxPathLengthStartingWithRoot(root);	
+		  } catch (LoopFoundException ex) {
+			  return -1; // indicating loop 
+		  } catch (InvalidInputException ex) {
+			  return -2;
+		  } catch (Exception ex) {
+			  return -2;
+		  }
+	  }
+
+	  /**
 	   * find the maximum path length in the structure/graph and print
 	   * the node label and the length of the path
 	   * @param root: node
 	   * @return maximum path length (type int)
 	   * 			possible values of return value are:
 	   * 			>= 0 (valid case of max path length of 0 or more in structure/graph)
-	   * 			-1 (indicating a loop in the structure/graph)
-	   * 			-2 (otherwise, for example indicating a null value passed for root)
+	   * 			throws LoopFoundException (indicating a loop in the structure/graph)
+	   * 			throws InvalidInputException (otherwise, for example indicating a null value passed for root)
 	   */
-	  public static int findMaxPathLength(Node root) {
-		  int maxPathLength = -2; // initialize the max path length to -2 (return this in case of an error)
-		  
+	  private static int findMaxPathLengthStartingWithRoot(Node root) throws LoopFoundException, InvalidInputException {
 		  if (root != null) {
-			  try {
-				  // create the list of children nodes based on their distance from root
-				  ArrayList<ArrayList<Node>> pathList = findPaths(root);
-				    
-				  if (pathList == null) {
-					  return maxPathLength;
-				  }
-				  
-				  if (pathList.isEmpty()) { // pathList is cleared when a loop is found
-				      // System.out.println("Structure has loops in it.");
-				      return -1; // here return value -1 is used to indicate a loop in the graph
-				  }
-			
-				  // the maximum path length is the maximum index on which a child node is stored in pathList
-				  maxPathLength = pathList.size() - 1;
-
-				  //  get the first node that is at the largest distance from root
-				  Node mostDistantNode = pathList.get(maxPathLength).get(0);
-
-				  // print the maximum path length and the most distant node from root
-				  System.out.println("Maximum path length from root node " + root.getLabel() + 
-						  			" to most distant node " + mostDistantNode.getLabel() + " is " + maxPathLength);
-				  
-			  } catch (Exception ex) {
-				  ex.printStackTrace();
-				  System.out.println("findMaxPathLength encountered an exception " + ex.toString());
+			  // create the list of children nodes based on their distance from root
+			  ArrayList<ArrayList<Node>> pathList = findPaths(root);
+				
+			  if (pathList == null) { 
+				  throw new InvalidInputException();
 			  }
-			  
-		  } 
-		    
-		  return maxPathLength;
+				
+			  if (pathList.isEmpty()) { // pathList is cleared when a loop is found
+				  throw new LoopFoundException(); // Graph has loops in it					  
+			  }
+				
+			  // the maximum path length is the maximum index on which a child node is stored in pathList
+			  int maxPathLength = pathList.size() - 1;
+
+			  //  get the first node that is at the largest distance from root
+			  Node mostDistantNode = pathList.get(maxPathLength).get(0);
+				
+			  // print the maximum path length and the most distant node from root
+			  System.out.println("Maximum path length from root node " + root.getLabel() + 
+				
+					  " to most distant node " + mostDistantNode.getLabel() + " is " + maxPathLength);
+			  return maxPathLength;
+
+		  } else {
+			  throw new InvalidInputException();
+		  }
 	  }
 
 	  /**
@@ -106,7 +118,7 @@ public class PathFinder {
 			  List<Node> nodeChildren = node.getChildren();
 			  if (nodeChildren != null) { // iterate through all the children of the current node
 				  for (Node childNode :  nodeChildren) {
-					  if (node == childNode) {
+					  if (node == childNode) { // loop found
 						  return true;
 					  }
 					  ArrayList<Node> visitedNodes = new ArrayList<Node>(Arrays.asList(new Node[] {node,  childNode}));
@@ -116,8 +128,8 @@ public class PathFinder {
 
 					  // add children of the current child node on this path to the list
 					  try {
-				    	  if (addChildren(childNode, childList, length + 1, visitedNodes)) {
-				    		  return true;
+				    	  if (addChildren(childNode, childList, length + 1, visitedNodes)) { // loop found
+				    		  return true; 
 				    	  }
 					  } catch (Exception ex) {
 						  System.out.println("addRootChildren encountered an exception: " + ex.toString());
@@ -144,6 +156,7 @@ public class PathFinder {
 	   */
 	  private static boolean addChildren(Node node, ArrayList<ArrayList<Node>> childList, 
 			  								int length, ArrayList<Node> visitedNodes) throws Exception{
+
 		  try {
 			  List<Node> nodeChildren = node.getChildren();
 			  if (nodeChildren != null) { // if node has children
@@ -184,9 +197,9 @@ public class PathFinder {
 	   * @param index
 	   */
 	  private static void addNodeAtIndex(Node node, ArrayList<ArrayList<Node>> childList, int index ) {
-  	  try {
-  		  childList.get(index).add(node);    
-	      } catch (Exception ex) { 
+		  try {
+			  childList.get(index).add(node);    
+	      } catch (IndexOutOfBoundsException ex) { 
 	    	  // Exception occurs in case the list is uninitialized
 	    	  // Initialize the childList when visiting the first child of the node
 	    	  childList.add(index, new ArrayList<Node>(Arrays.asList(new Node[] {node})));

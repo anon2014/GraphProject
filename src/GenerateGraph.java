@@ -7,23 +7,48 @@ import java.util.HashSet;
 public class GenerateGraph {
 
 	/**
+	 * Wrapper method to generate graph 
+	 * @param rootLabel
+	 * @param graph
+	 * @return
+	 */
+	  public Node generateGraphWithRoot(String rootLabel, Map<String, List<String>> graph) {
+		  Node rootNode = null;
+		  GenerateGraph g = new GenerateGraph();
+		  try {
+			  rootNode = g.generateRootedGraph(rootLabel, graph);
+		  } 
+		  // catch (NullRootException | NullGraphException | EmptyRootException ex) {
+		  //} 
+		  catch (NullRootException ex) {
+			  System.out.println("Root is null");
+		  } catch (NullGraphException ex) {
+			  System.out.println("Graph is null");
+		  } catch (EmptyRootException ex) {
+			  System.out.println("Root label is empty");
+		  }
+		  return rootNode; 
+	  }
+
+	/**
 	 * Generates a graph structure of nodes from the given input adjacency list
 	 * @param rootLabel: label for the root node
 	 * @param graph: Mapping between node labels representing the adjacency list for the graph
 	 * @return the root node
 	 */
-	public Node GenerateGraphWithRoot(String rootLabel, Map<String, List<String>> graph) {
-
-		if ((rootLabel == null) || (graph == null)) {
-			System.out.println("Root is null or graph is null, check input");
-			return null;
+	private Node generateRootedGraph(String rootLabel, Map<String, List<String>> graph) 
+					throws NullRootException, NullGraphException, EmptyRootException {
+		if (rootLabel == null) {
+			throw new NullRootException();
 		}
-		
+		if (graph == null) {
+			throw new NullGraphException();
+		}
+
 		rootLabel = rootLabel.trim(); // trim leading and trailing whitespaces from root label
 		
-		if (rootLabel.isEmpty() || (rootLabel.length() <= 0)) {
-			System.out.println("Root Label is an empty string");
-			return null;
+		if (rootLabel.isEmpty()) {
+			throw new EmptyRootException();
 		}
 		
 		// Create set of nodes
@@ -42,7 +67,6 @@ public class GenerateGraph {
 
 		// Create edges between nodes
 		for (Map.Entry<String, List<String>> entry: graph.entrySet()) {
-
 			String nodeLabel = entry.getKey();
 			try {
 				// get the node with the given label
@@ -50,27 +74,19 @@ public class GenerateGraph {
 				if (node != null) {
 					List<String> nodeChildrenLabels = entry.getValue();
 					for (String childLabel: nodeChildrenLabels) {
-						//System.out.println("Edge: node " + nodeLabel + " --> node " + childLabel);
-
-						try {
-							Node childNode = getNode(nodes, childLabel);
-							if (childNode == null) {
-								// System.out.println("Found null node, creating new node with label: " + childLabel);
-
-								childNode = new Node(childLabel);
-								nodes.add(childNode);
-							}
-							node.addChildNode(childNode);
-						} catch (Exception ex) {
-							ex.printStackTrace();
+						Node childNode = getNode(nodes, childLabel);
+						if (childNode == null) { // case when this node does not have an outgoing edge
+							childNode = new Node(childLabel);
+							nodes.add(childNode);
 						}
+						node.addChildNode(childNode);
 					}	
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
-		
+
 		return rootNode;
 	}
 	
